@@ -355,6 +355,33 @@ body {
 }
 .reset-btn:active { background: var(--bg); }
 
+/* === LOGIN OVERLAY === */
+.login-overlay {
+  position: fixed; inset: 0; background: var(--blue);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+}
+.login-card {
+  background: white; border-radius: 24px; padding: 32px 28px;
+  text-align: center; max-width: 320px; width: 90%;
+  animation: popIn 0.3s ease;
+}
+.login-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.login-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 24px; line-height: 1.45; }
+.login-input {
+  width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
+  border-radius: 12px; font-size: 1.1rem; text-align: center;
+  margin-bottom: 16px; font-weight: 700; color: var(--text); outline: none;
+  font-family: inherit;
+}
+.login-input:focus { border-color: var(--blue); }
+.profile-section {
+  background: white; border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.profile-name { font-size: 1rem; font-weight: 800; }
+.profile-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
 /* === MODE TOGGLE LISTE === */
 .mode-toggle { display:flex; background:var(--bg); border-radius:14px; padding:3px; margin-bottom:14px; gap:3px; }
 .mode-btn { flex:1; padding:9px 6px; border:none; border-radius:11px; font-size:0.78rem; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:all 0.15s; }
@@ -429,12 +456,26 @@ body {
 </head>
 <body>
 
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-card">
+    <div style="font-size:3.5rem;margin-bottom:10px">🗺️</div>
+    <div class="login-title">Paris Aléatoire</div>
+    <div class="login-sub">Entre ton prénom pour garder ta progression entre les sessions</div>
+    <input class="login-input" id="pseudoInput" placeholder="Ton prénom…" maxlength="20" autocomplete="off"
+      onkeydown="if(event.key==='Enter')validerPseudo()">
+    <button class="btn btn-close" onclick="validerPseudo()" style="width:100%;padding:14px">C'est parti !</button>
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:12px">Tes données restent sur ton appareil uniquement</div>
+  </div>
+</div>
+
 <div class="header">
   <div>
     <div class="header-title">🗺️ Paris Aléatoire</div>
     <div class="header-sub">Explore ta ville autrement</div>
   </div>
-  <div class="stats-pill">
+  <div class="stats-pill" onclick="ouvrirProfil()" style="cursor:pointer" title="Changer de compte">
+    <span id="hdr-pseudo" style="opacity:0.9">👤</span>
     <span>⭐ <span id="hdr-score">0</span></span>
     <span>✅ <span id="hdr-visited">0</span></span>
   </div>
@@ -457,15 +498,18 @@ body {
   <div id="tab-tirage" class="tab-pane active">
     <div class="draw-zone">
       <div class="type-toggle">
-        <button class="type-btn active" id="typeLieuBtn" onclick="setTirageType('lieu')">⭐ Lieu</button>
-        <button class="type-btn" id="typeRueBtn" onclick="setTirageType('rue')">🗺️ Rue</button>
+        <button class="type-btn" id="typeLieuBtn" onclick="setTirageType('lieu')">⭐ Lieu</button>
+        <button class="type-btn active" id="typeRueBtn" onclick="setTirageType('rue')">🗺️ Rue</button>
       </div>
       <div class="type-toggle">
-        <button class="type-btn active" id="proxOffBtn" onclick="setProximity(0)">🌍 Tout Paris</button>
-        <button class="type-btn" id="prox15Btn" onclick="setProximity(15)">🏠 15 min</button>
-        <button class="type-btn" id="prox30Btn" onclick="setProximity(30)">🏠 30 min</button>
-        <button class="type-btn" id="proxGps15Btn" onclick="setProximityGps(15)">📍 15 min</button>
-        <button class="type-btn" id="proxGps30Btn" onclick="setProximityGps(30)">📍 30 min</button>
+        <button class="type-btn active" id="zoneToutBtn" onclick="setZone('tout')">🌍 Tout</button>
+        <button class="type-btn" id="zoneMaisonBtn" onclick="setZone('maison')">🏠 Maison</button>
+        <button class="type-btn" id="zoneGpsBtn" onclick="setZone('gps')">📍 Position</button>
+        <button class="type-btn" id="zoneRentrantBtn" onclick="setZone('rentrant')">🚶 Rentrant</button>
+      </div>
+      <div class="type-toggle" id="durationRow" style="display:none">
+        <button class="type-btn active" id="dur15Btn" onclick="setDuration(15)">15 min</button>
+        <button class="type-btn" id="dur30Btn" onclick="setDuration(30)">30 min</button>
       </div>
       <button class="draw-btn" id="drawBtn" onclick="tirer()">
         🎲 Tirer au sort
@@ -548,6 +592,13 @@ body {
     <div class="achievements">
       <div class="ach-title">🎖️ Trophées</div>
       <div id="ach-container"></div>
+    </div>
+    <div class="profile-section">
+      <div>
+        <div class="profile-name" id="st-pseudo">—</div>
+        <div class="profile-label">👤 Ton compte — données locales</div>
+      </div>
+      <button onclick="changerCompte()" style="padding:8px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;color:var(--muted)">Changer</button>
     </div>
     <button class="reset-btn" onclick="confirmerReset()">🗑️ Remettre à zéro</button>
   </div>
@@ -6875,11 +6926,17 @@ let state = {
   current: null,
   hintsRevealed: 0,
   usedMap: false,
+  gpsClicks: 0,
 };
+
+function storageKey() {
+  const p = localStorage.getItem('paris-random-pseudo') || '_anon';
+  return 'paris-random-v2-' + p;
+}
 
 function loadState() {
   try {
-    const s = JSON.parse(localStorage.getItem("paris-random-v2") || "{}");
+    const s = JSON.parse(localStorage.getItem(storageKey()) || "{}");
     state.score = s.score || 0;
     state.visited = new Set(s.visited || []);
     state.skipped = new Set(s.skipped || []);
@@ -6887,11 +6944,48 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem("paris-random-v2", JSON.stringify({
+  localStorage.setItem(storageKey(), JSON.stringify({
     score: state.score,
     visited: [...state.visited],
     skipped: [...state.skipped],
   }));
+}
+
+// =====================================================
+//  AUTH — PSEUDO
+// =====================================================
+function validerPseudo() {
+  const input = document.getElementById('pseudoInput');
+  const pseudo = (input.value || '').trim();
+  if (!pseudo) { input.focus(); input.style.borderColor = 'var(--red)'; return; }
+  input.style.borderColor = '';
+  localStorage.setItem('paris-random-pseudo', pseudo);
+  document.getElementById('loginOverlay').style.display = 'none';
+  state = { score:0, visited:new Set(), skipped:new Set(), current:null, hintsRevealed:0, usedMap:false, gpsClicks:0 };
+  loadState();
+  updateHeader();
+  renderStats();
+}
+
+function initAuth() {
+  const pseudo = localStorage.getItem('paris-random-pseudo');
+  if (!pseudo) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    setTimeout(() => { const el = document.getElementById('pseudoInput'); if(el) el.focus(); }, 350);
+  }
+}
+
+function ouvrirProfil() {
+  const pseudo = localStorage.getItem('paris-random-pseudo') || '?';
+  if (confirm(`Compte actuel : ${pseudo}\n\nChanger de compte ?`)) changerCompte();
+}
+
+function changerCompte() {
+  const overlay = document.getElementById('loginOverlay');
+  overlay.style.display = 'flex';
+  const input = document.getElementById('pseudoInput');
+  input.value = '';
+  setTimeout(() => input.focus(), 100);
 }
 
 // =====================================================
@@ -6953,24 +7047,23 @@ function computeHintsForVoie(lieu) {
 // =====================================================
 //  TIRAGE VOIES
 // =====================================================
-function tirerRue(km = null) {
-  const origin = getProxOrigin();
+function tirerRue() {
   const visitedVoies = new Set([...state.visited].filter(isVoieId));
   let pool = [];
   VOIES.forEach((v,i) => {
     if(visitedVoies.has(voieId(i))) return;
-    if(km !== null && haversineKm(origin.lat,origin.lng,v[3],v[4]) > km) return;
+    if(!isInProxFilter(v[3], v[4])) return;
     pool.push(i);
   });
   if(pool.length === 0) {
-    const minLabel = km === WALK_15MIN_KM ? '15' : '30';
-    alert(km !== null ? `Plus aucune voie non-visitée à ${minLabel} min à pied !` : "🎉 Tu as exploré toutes les voies de Paris !");
+    alert(proxZone !== 'tout' ? `Plus aucune voie non-visitée dans cette zone !` : "🎉 Tu as exploré toutes les voies de Paris !");
     return;
   }
   const idx = pool[Math.floor(Math.random() * pool.length)];
   state.current = toVoieLieu(idx);
   state.hintsRevealed = 0;
   state.usedMap = false;
+  state.gpsClicks = 0;
   gpsLastDist = null;
   renderChallenge(state.current);
 }
@@ -7108,6 +7201,9 @@ function refreshGpsDistance() {
       btn.classList.remove("loading");
       btn.innerHTML = "📍 Actualiser";
 
+      state.gpsClicks = (state.gpsClicks || 0) + 1;
+      updateScoreDisplay();
+
       const myLat = pos.coords.latitude;
       const myLng = pos.coords.longitude;
       const accuracy = pos.coords.accuracy; // metres
@@ -7178,61 +7274,71 @@ function refreshGpsDistance() {
 // =====================================================
 //  TIRAGE
 // =====================================================
-let tirageType = 'lieu';
-let proximityMinutes = 0;
-let proximityGps = false;
+let tirageType = 'rue';
+let proxZone = 'tout';   // 'tout' | 'maison' | 'gps' | 'rentrant'
+let proxMinutes = 15;
 let gpsProxPos = null;
 
 function getProxKm() {
-  if (proximityMinutes === 0) return null;
-  return proximityMinutes === 15 ? WALK_15MIN_KM : WALK_30MIN_KM;
-}
-function getProxOrigin() {
-  return (proximityGps && gpsProxPos) ? gpsProxPos : HOME;
+  return proxZone === 'tout' ? null : (proxMinutes === 15 ? WALK_15MIN_KM : WALK_30MIN_KM);
 }
 
-function setProximity(mins) {
-  proximityMinutes = mins;
-  proximityGps = false;
-  document.getElementById('proxOffBtn').classList.toggle('active', mins === 0);
-  document.getElementById('prox15Btn').classList.toggle('active', mins === 15);
-  document.getElementById('prox30Btn').classList.toggle('active', mins === 30);
-  document.getElementById('proxGps15Btn').classList.remove('active');
-  document.getElementById('proxGps30Btn').classList.remove('active');
+function isInProxFilter(lat, lng) {
+  if (proxZone === 'tout') return true;
+  const km = getProxKm();
+  if (proxZone === 'maison') return haversineKm(HOME.lat, HOME.lng, lat, lng) <= km;
+  const gps = gpsProxPos || HOME;
+  if (proxZone === 'gps') return haversineKm(gps.lat, gps.lng, lat, lng) <= km;
+  if (proxZone === 'rentrant') {
+    const detour = haversineKm(gps.lat, gps.lng, lat, lng)
+                 + haversineKm(lat, lng, HOME.lat, HOME.lng)
+                 - haversineKm(gps.lat, gps.lng, HOME.lat, HOME.lng);
+    return detour <= km;
+  }
+  return true;
+}
+
+function updateProxUI() {
+  ['Tout','Maison','Gps','Rentrant'].forEach(z => {
+    const btn = document.getElementById('zone' + z + 'Btn');
+    if (btn) btn.classList.toggle('active', z.toLowerCase() === proxZone);
+  });
+  const durRow = document.getElementById('durationRow');
+  if (durRow) durRow.style.display = proxZone === 'tout' ? 'none' : '';
+  document.getElementById('dur15Btn').classList.toggle('active', proxMinutes === 15);
+  document.getElementById('dur30Btn').classList.toggle('active', proxMinutes === 30);
   setTirageType(tirageType);
 }
 
-function setProximityGps(mins) {
-  if (!navigator.geolocation) {
-    alert("GPS non disponible sur cet appareil");
+function setZone(zone) {
+  if ((zone === 'gps' || zone === 'rentrant') && !gpsProxPos) {
+    if (!navigator.geolocation) { alert("GPS non disponible sur cet appareil"); return; }
+    const btnId = zone === 'gps' ? 'zoneGpsBtn' : 'zoneRentrantBtn';
+    const btn = document.getElementById(btnId);
+    const orig = btn.innerHTML;
+    btn.textContent = "⏳…"; btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        btn.innerHTML = orig; btn.disabled = false;
+        gpsProxPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        proxZone = zone;
+        updateProxUI();
+      },
+      () => {
+        btn.innerHTML = orig; btn.disabled = false;
+        alert("Impossible d'obtenir ta position GPS — active-la dans les réglages");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
     return;
   }
-  const btnId = mins === 15 ? 'proxGps15Btn' : 'proxGps30Btn';
-  const btn = document.getElementById(btnId);
-  const origHTML = btn.innerHTML;
-  btn.textContent = "⏳…";
-  btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      btn.innerHTML = origHTML;
-      btn.disabled = false;
-      gpsProxPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      proximityMinutes = mins;
-      proximityGps = true;
-      document.getElementById('proxOffBtn').classList.remove('active');
-      document.getElementById('prox15Btn').classList.remove('active');
-      document.getElementById('prox30Btn').classList.remove('active');
-      document.getElementById('proxGps15Btn').classList.toggle('active', mins === 15);
-      document.getElementById('proxGps30Btn').classList.toggle('active', mins === 30);
-      setTirageType(tirageType);
-    },
-    () => {
-      btn.innerHTML = origHTML;
-      btn.disabled = false;
-      alert("Impossible d'obtenir ta position GPS — active-la dans les réglages");
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-  );
+  proxZone = zone;
+  updateProxUI();
+}
+
+function setDuration(mins) {
+  proxMinutes = mins;
+  updateProxUI();
 }
 
 function setTirageType(type) {
@@ -7241,10 +7347,10 @@ function setTirageType(type) {
   document.getElementById('typeRueBtn').classList.toggle('active', type === 'rue');
   const sub = document.getElementById('drawBtnSub');
   if (sub) {
-    const locLabel = proximityMinutes === 15
-      ? `à 15 min à pied${proximityGps ? ' de ma position' : ''}`
-      : proximityMinutes === 30
-      ? `à 30 min à pied${proximityGps ? ' de ma position' : ''}` : null;
+    let locLabel = null;
+    if (proxZone === 'maison') locLabel = `à ${proxMinutes} min à pied de la maison`;
+    else if (proxZone === 'gps') locLabel = `à ${proxMinutes} min à pied de ta position`;
+    else if (proxZone === 'rentrant') locLabel = `sur le chemin du retour (détour ≤ ${proxMinutes} min)`;
     sub.textContent = type === 'rue'
       ? (locLabel ? `Parmi les rues ${locLabel}` : 'Parmi les 5 550 voies de Paris')
       : (locLabel ? `Parmi les lieux ${locLabel}` : 'Parmi les 200 lieux de Paris');
@@ -7252,17 +7358,15 @@ function setTirageType(type) {
 }
 
 function tirer() {
-  const km = getProxKm();
-  if (tirageType === 'rue') tirerRue(km);
-  else tirerAuSort(km);
+  if (tirageType === 'rue') tirerRue();
+  else tirerAuSort();
 }
 
-function tirerAuSort(km = null) {
-  const origin = getProxOrigin();
-  let pool = LIEUX.filter(l => l.id < 201 && !state.visited.has(l.id) && (km === null || haversineKm(origin.lat,origin.lng,l.lat,l.lng) <= km));
+function tirerAuSort() {
+  let pool = LIEUX.filter(l => l.id < 201 && !state.visited.has(l.id) && isInProxFilter(l.lat, l.lng));
   if (pool.length === 0) {
-    const minLabel = km === WALK_15MIN_KM ? '15' : '30';
-    alert(km !== null ? `Plus aucun lieu non-visité à ${minLabel} min à pied !` : "🎉 Incroyable ! Tu as visité tous les lieux de Paris !");
+    const zoneLabel = proxZone === 'tout' ? '' : ` (zone : ${proxZone}, ${proxMinutes} min)`;
+    alert(proxZone !== 'tout' ? `Plus aucun lieu non-visité dans cette zone${zoneLabel} !` : "🎉 Incroyable ! Tu as visité tous les lieux de Paris !");
     return;
   }
   const candidates = pool.filter(l => !state.skipped.has(l.id));
@@ -7271,6 +7375,7 @@ function tirerAuSort(km = null) {
   state.current = lieu;
   state.hintsRevealed = 0;
   state.usedMap = false;
+  state.gpsClicks = 0;
   gpsLastDist = null;
   renderChallenge(lieu);
 }
@@ -7352,7 +7457,7 @@ function revelerIndice(index) {
 }
 
 function updateScoreDisplay() {
-  const pts = Math.max(0, 5 - state.hintsRevealed);
+  const pts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks);
   for (let i = 0; i < 5; i++) {
     const star = document.getElementById("star-" + i);
     if (star) star.className = "star" + (i < pts ? "" : " dim");
@@ -7361,7 +7466,7 @@ function updateScoreDisplay() {
 
 function marquerVisite() {
   if (!state.current) return;
-  const basePts = Math.max(0, 5 - state.hintsRevealed);
+  const basePts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks);
   const bonusCarte = !state.usedMap ? 1 : 0;
   const pts = basePts + bonusCarte;
   state.score += pts;
@@ -7569,6 +7674,11 @@ function renderStats() {
 function updateHeader() {
   document.getElementById("hdr-score").textContent = state.score;
   document.getElementById("hdr-visited").textContent = state.visited.size;
+  const pseudo = localStorage.getItem('paris-random-pseudo') || '?';
+  const pseudoEl = document.getElementById('hdr-pseudo');
+  if (pseudoEl) pseudoEl.textContent = pseudo;
+  const stEl = document.getElementById('st-pseudo');
+  if (stEl) stEl.textContent = pseudo;
 }
 
 function confirmerReset() {
@@ -7589,6 +7699,8 @@ function confirmerReset() {
 // =====================================================
 loadState();
 updateHeader();
+initAuth();
+setTirageType('rue');
 </script>
 </body>
 </html>
