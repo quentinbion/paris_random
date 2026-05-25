@@ -382,6 +382,41 @@ body {
 .profile-name { font-size: 1rem; font-weight: 800; }
 .profile-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 
+/* === SETTINGS TAB === */
+.settings-section {
+  background: white; border-radius: 14px; padding: 16px;
+  box-shadow: var(--shadow); margin-bottom: 12px;
+}
+.settings-title {
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.settings-val { font-size: 0.95rem; font-weight: 700; }
+.settings-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.settings-btn {
+  flex-shrink: 0; padding: 8px 14px; background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--muted);
+}
+.settings-label { font-size: 0.78rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.history-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { font-size: 0.68rem; color: var(--muted); min-width: 60px; }
+.history-nom { font-size: 0.85rem; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-pts { font-size: 0.75rem; color: var(--gold); font-weight: 700; }
+.dur-custom-input {
+  width: 60px; padding: 9px 6px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 0.95rem; font-weight: 700; text-align: center;
+  outline: none; font-family: inherit; color: var(--text);
+}
+.dur-custom-input:focus { border-color: var(--blue); }
+
 /* === MODE TOGGLE LISTE === */
 .mode-toggle { display:flex; background:var(--bg); border-radius:14px; padding:3px; margin-bottom:14px; gap:3px; }
 .mode-btn { flex:1; padding:9px 6px; border:none; border-radius:11px; font-size:0.78rem; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:all 0.15s; }
@@ -491,6 +526,9 @@ body {
   <div class="tab" data-tab="stats">
     <span class="tab-icon">🏆</span>Trophées
   </div>
+  <div class="tab" data-tab="settings">
+    <span class="tab-icon">⚙️</span>Réglages
+  </div>
 </div>
 
 <div class="content">
@@ -507,9 +545,13 @@ body {
         <button class="type-btn" id="zoneGpsBtn" onclick="setZone('gps')">📍 Position</button>
         <button class="type-btn" id="zoneRentrantBtn" onclick="setZone('rentrant')">🚶 Rentrant</button>
       </div>
-      <div class="type-toggle" id="durationRow" style="display:none">
+      <div class="type-toggle" id="durationRow" style="display:none;align-items:center">
         <button class="type-btn active" id="dur15Btn" onclick="setDuration(15)">15 min</button>
         <button class="type-btn" id="dur30Btn" onclick="setDuration(30)">30 min</button>
+        <input class="dur-custom-input" id="durCustomInput" type="number" min="1" max="180"
+          placeholder="…" title="Durée personnalisée (minutes)"
+          oninput="setDurationCustom(+this.value)" style="display:none">
+        <button class="type-btn" id="durCustomBtn" onclick="toggleDurCustom()" style="flex:0;padding:10px 10px">✏️</button>
       </div>
       <button class="draw-btn" id="drawBtn" onclick="tirer()">
         🎲 Tirer au sort
@@ -593,14 +635,45 @@ body {
       <div class="ach-title">🎖️ Trophées</div>
       <div id="ach-container"></div>
     </div>
-    <div class="profile-section">
-      <div>
-        <div class="profile-name" id="st-pseudo">—</div>
-        <div class="profile-label">👤 Ton compte — données locales</div>
-      </div>
-      <button onclick="changerCompte()" style="padding:8px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;color:var(--muted)">Changer</button>
-    </div>
     <button class="reset-btn" onclick="confirmerReset()">🗑️ Remettre à zéro</button>
+  </div>
+
+  <!-- TAB RÉGLAGES -->
+  <div id="tab-settings" class="tab-pane">
+
+    <!-- Compte -->
+    <div class="settings-section">
+      <div class="settings-title">👤 Mon compte</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-val" id="cfg-pseudo">—</div>
+          <div class="settings-sub">Données sauvegardées sur cet appareil</div>
+        </div>
+        <button class="settings-btn" onclick="changerCompte()">Changer</button>
+      </div>
+    </div>
+
+    <!-- Ma maison -->
+    <div class="settings-section">
+      <div class="settings-title">🏠 Ma maison</div>
+      <div class="settings-row">
+        <div style="flex:1;min-width:0">
+          <div class="settings-val" id="cfg-home" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+          <div class="settings-sub">Référence pour les filtres "à X min de chez toi"</div>
+        </div>
+        <button class="settings-btn" id="homeGpsBtn" onclick="setHomeFromGps()">📍 GPS</button>
+      </div>
+    </div>
+
+    <!-- Historique -->
+    <div class="settings-section">
+      <div class="settings-title">📜 Historique des visites</div>
+      <div id="history-container">
+        <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:16px 0">Pas encore de visites</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="confirmerReset()">🗑️ Remettre à zéro la progression</button>
   </div>
 </div>
 
@@ -6864,8 +6937,33 @@ const TYPES_LABELS = {
   place: "Place / Square", mairie: "Mairie"
 };
 
-// 99 rue des Maraîchers, Paris 20e
 const HOME = { lat: 48.8558, lng: 2.4010, label: "Place de la Réunion (20e)" };
+
+function loadHome() {
+  try {
+    const h = JSON.parse(localStorage.getItem('paris-random-home') || 'null');
+    if (h && h.lat && h.lng) { HOME.lat = h.lat; HOME.lng = h.lng; HOME.label = h.label || 'Ma maison'; }
+  } catch(e) {}
+}
+
+function setHomeFromGps() {
+  if (!navigator.geolocation) { alert("GPS non disponible"); return; }
+  const btn = document.getElementById('homeGpsBtn');
+  btn.textContent = "⏳…"; btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      btn.textContent = "📍 GPS"; btn.disabled = false;
+      HOME.lat = pos.coords.latitude;
+      HOME.lng = pos.coords.longitude;
+      HOME.label = `Ma position (${HOME.lat.toFixed(4)}, ${HOME.lng.toFixed(4)})`;
+      localStorage.setItem('paris-random-home', JSON.stringify({ lat: HOME.lat, lng: HOME.lng, label: HOME.label }));
+      renderSettings();
+      alert("✅ Maison mise à jour depuis ta position GPS !");
+    },
+    () => { btn.textContent = "📍 GPS"; btn.disabled = false; alert("GPS indisponible — active-le dans les réglages"); },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
 const WALK_30MIN_KM = 2.2;
 const WALK_15MIN_KM  = 1.1;
 
@@ -6927,6 +7025,7 @@ let state = {
   hintsRevealed: 0,
   usedMap: false,
   gpsClicks: 0,
+  history: [],
 };
 
 function storageKey() {
@@ -6940,6 +7039,7 @@ function loadState() {
     state.score = s.score || 0;
     state.visited = new Set(s.visited || []);
     state.skipped = new Set(s.skipped || []);
+    state.history = s.history || [];
   } catch(e) {}
 }
 
@@ -6948,6 +7048,7 @@ function saveState() {
     score: state.score,
     visited: [...state.visited],
     skipped: [...state.skipped],
+    history: state.history,
   }));
 }
 
@@ -6961,10 +7062,11 @@ function validerPseudo() {
   input.style.borderColor = '';
   localStorage.setItem('paris-random-pseudo', pseudo);
   document.getElementById('loginOverlay').style.display = 'none';
-  state = { score:0, visited:new Set(), skipped:new Set(), current:null, hintsRevealed:0, usedMap:false, gpsClicks:0 };
+  state = { score:0, visited:new Set(), skipped:new Set(), current:null, hintsRevealed:0, usedMap:false, gpsClicks:0, history:[] };
   loadState();
   updateHeader();
   renderStats();
+  renderSettings();
 }
 
 function initAuth() {
@@ -6999,6 +7101,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
     if (tab.dataset.tab === "liste") renderListe();
     if (tab.dataset.tab === "stats") renderStats();
+    if (tab.dataset.tab === "settings") renderSettings();
   });
 });
 
@@ -7165,6 +7268,7 @@ function ouvrirVoieItem(idx) {
 function marquerVisiteVoie(idx) {
   state.score += 2;
   state.visited.add(voieId(idx));
+  pushHistory({ id: voieId(idx), nom: VOIES[idx][0], score: 2, emoji: VOIE_EMOJIS[VOIES[idx][1]] || "🛤️" });
   saveState(); updateHeader();
   renderVoies();
 }
@@ -7472,6 +7576,8 @@ function marquerVisite() {
   state.score += pts;
   state.visited.add(state.current.id);
   state.skipped.delete(state.current.id);
+  const emoji = TYPES_EMOJIS[state.current.type] || (state.current._isVoie ? "🛤️" : "📍");
+  pushHistory({ id: state.current.id, nom: state.current.nom, score: pts, emoji });
   saveState();
   updateHeader();
 
@@ -7610,8 +7716,10 @@ function ouvrirListItem(id) {
 }
 
 function marquerVisiteId(id) {
+  const lieu = LIEUX.find(l => l.id === id);
   state.score += 3;
   state.visited.add(id);
+  if (lieu) pushHistory({ id, nom: lieu.nom, score: 3, emoji: TYPES_EMOJIS[lieu.type] || "📍" });
   saveState();
   updateHeader();
   document.querySelectorAll(".success-overlay").forEach(el => el.remove());
@@ -7682,21 +7790,87 @@ function updateHeader() {
 }
 
 function confirmerReset() {
-  if (confirm("Remettre à zéro ? Score et visites seront perdus.")) {
+  if (confirm("Remettre à zéro ? Score, visites et historique seront perdus.")) {
     state.score = 0;
     state.visited = new Set();
     state.skipped = new Set();
+    state.history = [];
     state.current = null;
     saveState();
     updateHeader();
     renderStats();
+    renderSettings();
     location.reload();
   }
 }
 
 // =====================================================
+//  RÉGLAGES
+// =====================================================
+function pushHistory(entry) {
+  state.history.unshift({ ...entry, date: Date.now() });
+  if (state.history.length > 50) state.history.pop();
+}
+
+function renderSettings() {
+  const pseudo = localStorage.getItem('paris-random-pseudo') || '—';
+  const cfgPseudo = document.getElementById('cfg-pseudo');
+  if (cfgPseudo) cfgPseudo.textContent = pseudo;
+
+  const cfgHome = document.getElementById('cfg-home');
+  if (cfgHome) cfgHome.textContent = HOME.label;
+
+  const hc = document.getElementById('history-container');
+  if (!hc) return;
+  if (!state.history.length) {
+    hc.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:16px 0">Pas encore de visites</div>';
+    return;
+  }
+  hc.innerHTML = state.history.map(h => {
+    const d = new Date(h.date);
+    const dateStr = d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+    const timeStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    return `<div class="history-item">
+      <span style="font-size:1.2rem">${h.emoji || '📍'}</span>
+      <div style="flex:1;min-width:0">
+        <div class="history-nom">${h.nom}</div>
+        <div class="history-date">${dateStr} · ${timeStr}</div>
+      </div>
+      <div class="history-pts">+${h.score}⭐</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDurCustom() {
+  const input = document.getElementById('durCustomInput');
+  const isHidden = input.style.display === 'none';
+  input.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    input.value = proxMinutes;
+    input.focus();
+    document.getElementById('dur15Btn').classList.remove('active');
+    document.getElementById('dur30Btn').classList.remove('active');
+    document.getElementById('durCustomBtn').classList.add('active');
+  } else {
+    document.getElementById('durCustomBtn').classList.remove('active');
+    setDuration(proxMinutes <= 15 ? 15 : 30);
+  }
+}
+
+function setDurationCustom(val) {
+  const v = Math.max(1, Math.min(180, Math.round(+val)));
+  if (!v) return;
+  proxMinutes = v;
+  document.getElementById('dur15Btn').classList.remove('active');
+  document.getElementById('dur30Btn').classList.remove('active');
+  document.getElementById('durCustomBtn').classList.add('active');
+  setTirageType(tirageType);
+}
+
+// =====================================================
 //  INIT
 // =====================================================
+loadHome();
 loadState();
 updateHeader();
 initAuth();
