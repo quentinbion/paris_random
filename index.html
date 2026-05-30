@@ -7186,6 +7186,7 @@ function tirerRue() {
   state.hintsRevealed = 0;
   state.usedMap = false;
   state.gpsClicks = 0;
+  state.minimapRevealed = false;
   gpsLastDist = null;
   gpsPoints = [];
   renderChallenge(state.current);
@@ -7372,8 +7373,10 @@ function refreshGpsDistance() {
 
       gpsLastDist = newDist;
       gpsPoints.push({ lat: myLat, lng: myLng, distKm: newDist, distText });
-      const minimapWrap = document.getElementById('gpsMinimapWrap');
-      if (minimapWrap) { minimapWrap.style.display = ''; renderGpsMinimap(); }
+      if (state.minimapRevealed) {
+        const minimapWrap = document.getElementById('gpsMinimapWrap');
+        if (minimapWrap) { minimapWrap.style.display = ''; renderGpsMinimap(); }
+      }
 
       // Accuracy hint
       if (accuracy > 50) {
@@ -7590,14 +7593,13 @@ function tirerAuSort() {
   state.hintsRevealed = 0;
   state.usedMap = false;
   state.gpsClicks = 0;
+  state.minimapRevealed = false;
   gpsLastDist = null;
   gpsPoints = [];
   renderChallenge(lieu);
 }
 
 function renderChallenge(lieu) {
-  gpsLastDist = null;
-  gpsPoints = [];
   const distHome = haversineKm(HOME.lat, HOME.lng, lieu.lat, lieu.lng);
   const nearby15 = distHome <= WALK_15MIN_KM;
   const nearby30  = distHome <= WALK_30MIN_KM;
@@ -7616,6 +7618,7 @@ function renderChallenge(lieu) {
       <div class="hints-section">
         <div class="hints-title">Indices de navigation · chaque indice coûte 1⭐</div>
         ${renderHintRows(lieu)}
+        ${renderMinimapHintRow()}
       </div>
       <div class="gps-tracker" id="gpsTracker">
         <div class="gps-tracker-inner">
@@ -7664,6 +7667,49 @@ function renderHintRows(lieu) {
   `).join("");
 }
 
+function renderMinimapHintRow() {
+  if (state.minimapRevealed) {
+    return `
+    <div class="hint-row revealed" id="minimap-hint-row">
+      <span class="hint-icon">🗺️</span>
+      <div style="flex:1;min-width:0">
+        <div class="hint-label">Tracé GPS de ta progression</div>
+        <div class="hint-value">Débloqué — mesure ta distance ci-dessous</div>
+      </div>
+      <span style="color:#16A34A;font-size:1rem;flex-shrink:0">✓</span>
+    </div>`;
+  }
+  return `
+    <div class="hint-row locked" id="minimap-hint-row" onclick="revelerMinimap()">
+      <span class="hint-icon">🗺️</span>
+      <div style="flex:1;min-width:0">
+        <div class="hint-label">Tracé GPS de ta progression</div>
+        <div class="hint-value" style="color:var(--muted)">Appuie pour révéler</div>
+      </div>
+      <span class="hint-cost">−1⭐</span>
+    </div>`;
+}
+
+function revelerMinimap() {
+  if (!state.current || state.minimapRevealed) return;
+  state.minimapRevealed = true;
+  const row = document.getElementById('minimap-hint-row');
+  if (row) {
+    row.className = 'hint-row revealed';
+    row.onclick = null;
+    row.innerHTML = `
+      <span class="hint-icon">🗺️</span>
+      <div style="flex:1;min-width:0">
+        <div class="hint-label">Tracé GPS de ta progression</div>
+        <div class="hint-value">Débloqué — mesure ta distance ci-dessous</div>
+      </div>
+      <span style="color:#16A34A;font-size:1rem;flex-shrink:0">✓</span>`;
+  }
+  const wrap = document.getElementById('gpsMinimapWrap');
+  if (wrap && gpsPoints.length > 0) { wrap.style.display = ''; renderGpsMinimap(); }
+  updateScoreDisplay();
+}
+
 function revelerIndice(index) {
   if (!state.current) return;
   if (index < state.hintsRevealed) return;
@@ -7677,7 +7723,8 @@ function revelerIndice(index) {
 }
 
 function updateScoreDisplay() {
-  const pts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks);
+  const minimapCost = state.minimapRevealed ? 1 : 0;
+  const pts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks - minimapCost);
   for (let i = 0; i < 5; i++) {
     const star = document.getElementById("star-" + i);
     if (star) star.className = "star" + (i < pts ? "" : " dim");
@@ -7686,7 +7733,8 @@ function updateScoreDisplay() {
 
 function marquerVisite() {
   if (!state.current) return;
-  const basePts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks);
+  const minimapCost = state.minimapRevealed ? 1 : 0;
+  const basePts = Math.max(0, 5 - state.hintsRevealed - state.gpsClicks - minimapCost);
   const bonusCarte = !state.usedMap ? 1 : 0;
   const pts = basePts + bonusCarte;
   state.score += pts;
