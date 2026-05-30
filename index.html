@@ -7401,8 +7401,7 @@ function refreshGpsDistance() {
 
 function renderGpsMinimap() {
   const canvas = document.getElementById('gpsMinimapCanvas');
-  if (!canvas || gpsPoints.length === 0 || !state.current) return;
-  const dest = state.current;
+  if (!canvas || gpsPoints.length === 0) return;
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
@@ -7413,17 +7412,27 @@ function renderGpsMinimap() {
   ctx.roundRect(0, 0, W, H, 16);
   ctx.fill();
 
-  // Compute bounding box (all points + destination)
-  const allLats = [dest.lat, ...gpsPoints.map(p => p.lat)];
-  const allLngs = [dest.lng, ...gpsPoints.map(p => p.lng)];
+  // Color per point: first = gray, closer = green, further = red, stable = orange
+  function pointColor(i) {
+    if (i === 0) return { fill: '#6B7280', stroke: 'white' };
+    const delta = gpsPoints[i - 1].distKm - gpsPoints[i].distKm;
+    if (Math.abs(delta) < 0.005) return { fill: '#D97706', stroke: 'white' }; // stable
+    return delta > 0
+      ? { fill: '#16A34A', stroke: 'white' }   // closer
+      : { fill: '#EF4135', stroke: 'white' };  // further
+  }
+
+  // Bounding box — GPS points only (destination hidden)
+  const allLats = gpsPoints.map(p => p.lat);
+  const allLngs = gpsPoints.map(p => p.lng);
   const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
   const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-  const rangeLatDeg = (maxLat - minLat) || 0.004;
-  const rangeLngDeg = (maxLng - minLng) || 0.004;
-  const mLat = rangeLatDeg * 0.35, mLng = rangeLngDeg * 0.35;
+  const rangeLatDeg = (maxLat - minLat) || 0.003;
+  const rangeLngDeg = (maxLng - minLng) || 0.003;
+  const mLat = rangeLatDeg * 0.45, mLng = rangeLngDeg * 0.45;
   const bMinLat = minLat - mLat, bMaxLat = maxLat + mLat;
   const bMinLng = minLng - mLng, bMaxLng = maxLng + mLng;
-  const pad = 28;
+  const pad = 32;
 
   function toXY(lat, lng) {
     const x = pad + (lng - bMinLng) / (bMaxLng - bMinLng) * (W - 2 * pad);
@@ -7431,79 +7440,48 @@ function renderGpsMinimap() {
     return [x, y];
   }
 
-  // Line from last point to destination (dashed, faint)
-  const [xd, yd] = toXY(dest.lat, dest.lng);
-  const last = gpsPoints[gpsPoints.length - 1];
-  const [xl, yl] = toXY(last.lat, last.lng);
-  ctx.beginPath();
-  ctx.setLineDash([5, 5]);
-  ctx.strokeStyle = 'rgba(0,85,164,0.18)';
-  ctx.lineWidth = 2;
-  ctx.moveTo(xl, yl);
-  ctx.lineTo(xd, yd);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Lines connecting GPS points chronologically
-  if (gpsPoints.length > 1) {
+  // Lines connecting GPS points (colored by direction)
+  for (let i = 1; i < gpsPoints.length; i++) {
+    const [x0, y0] = toXY(gpsPoints[i - 1].lat, gpsPoints[i - 1].lng);
+    const [x1, y1] = toXY(gpsPoints[i].lat, gpsPoints[i].lng);
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(0,85,164,0.35)';
-    ctx.lineWidth = 2;
-    const [x0, y0] = toXY(gpsPoints[0].lat, gpsPoints[0].lng);
+    ctx.strokeStyle = pointColor(i).fill + 'AA';
+    ctx.lineWidth = 2.5;
     ctx.moveTo(x0, y0);
-    for (let i = 1; i < gpsPoints.length; i++) {
-      const [x, y] = toXY(gpsPoints[i].lat, gpsPoints[i].lng);
-      ctx.lineTo(x, y);
-    }
+    ctx.lineTo(x1, y1);
     ctx.stroke();
   }
-
-  // Destination marker
-  ctx.beginPath();
-  ctx.arc(xd, yd, 9, 0, Math.PI * 2);
-  ctx.fillStyle = '#EF4135';
-  ctx.fill();
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  // crosshair
-  ctx.strokeStyle = 'rgba(239,65,53,0.6)';
-  ctx.lineWidth = 1.5;
-  [[xd - 15, yd, xd - 10, yd],[xd + 10, yd, xd + 15, yd],
-   [xd, yd - 15, xd, yd - 10],[xd, yd + 10, xd, yd + 15]].forEach(([x1,y1,x2,y2]) => {
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  });
 
   // GPS points
   gpsPoints.forEach((p, i) => {
     const [x, y] = toXY(p.lat, p.lng);
     const isLast = i === gpsPoints.length - 1;
-    const r = isLast ? 11 : 8;
+    const r = isLast ? 12 : 9;
+    const { fill, stroke } = pointColor(i);
+
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = isLast ? '#0055A4' : 'rgba(0,85,164,0.55)';
+    ctx.fillStyle = isLast ? fill : fill + 'CC';
     ctx.fill();
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = isLast ? 2.5 : 2;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = isLast ? 3 : 2;
     ctx.stroke();
 
     // Number inside dot
     ctx.fillStyle = 'white';
-    ctx.font = `bold ${isLast ? 10 : 9}px system-ui, sans-serif`;
+    ctx.font = `bold ${isLast ? 11 : 9}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(i + 1, x, y);
 
-    // Distance label
-    if (isLast || gpsPoints.length <= 4) {
-      const labelX = x > W / 2 ? x - r - 4 : x + r + 4;
-      const align = x > W / 2 ? 'right' : 'left';
-      ctx.font = `bold ${isLast ? 11 : 10}px system-ui, sans-serif`;
-      ctx.textAlign = align;
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = isLast ? '#0055A4' : 'rgba(0,85,164,0.75)';
-      ctx.fillText(p.distText, labelX, y);
-    }
+    // Distance label — always shown, right/left depending on position
+    const labelX = x > W / 2 ? x - r - 5 : x + r + 5;
+    const align = x > W / 2 ? 'right' : 'left';
+    ctx.font = `bold ${isLast ? 11 : 10}px system-ui, sans-serif`;
+    ctx.textAlign = align;
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isLast ? fill : fill + 'BB';
+    ctx.fillText(p.distText, labelX, y);
   });
 }
 
