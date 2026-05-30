@@ -486,6 +486,25 @@ body {
   color: var(--muted);
   margin-top: 1px;
 }
+.gps-minimap {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px 10px;
+}
+.gps-minimap-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+#gpsMinimapCanvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  background: #f0f4f8;
+}
 
 </style>
 </head>
@@ -7168,6 +7187,7 @@ function tirerRue() {
   state.usedMap = false;
   state.gpsClicks = 0;
   gpsLastDist = null;
+  gpsPoints = [];
   renderChallenge(state.current);
 }
 
@@ -7283,6 +7303,7 @@ function decocherVoie(idx) {
 //  GPS DISTANCE TRACKER
 // =====================================================
 let gpsLastDist = null; // distance in km at last click
+let gpsPoints = [];    // [{lat, lng, distKm, distText}] — one per measurement
 
 function refreshGpsDistance() {
   const btn = document.getElementById("gpsBtnEl");
@@ -7350,6 +7371,9 @@ function refreshGpsDistance() {
       }
 
       gpsLastDist = newDist;
+      gpsPoints.push({ lat: myLat, lng: myLng, distKm: newDist, distText });
+      const minimapWrap = document.getElementById('gpsMinimapWrap');
+      if (minimapWrap) { minimapWrap.style.display = ''; renderGpsMinimap(); }
 
       // Accuracy hint
       if (accuracy > 50) {
@@ -7373,6 +7397,114 @@ function refreshGpsDistance() {
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
+}
+
+function renderGpsMinimap() {
+  const canvas = document.getElementById('gpsMinimapCanvas');
+  if (!canvas || gpsPoints.length === 0 || !state.current) return;
+  const dest = state.current;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#eef2f7';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, H, 16);
+  ctx.fill();
+
+  // Compute bounding box (all points + destination)
+  const allLats = [dest.lat, ...gpsPoints.map(p => p.lat)];
+  const allLngs = [dest.lng, ...gpsPoints.map(p => p.lng)];
+  const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+  const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+  const rangeLatDeg = (maxLat - minLat) || 0.004;
+  const rangeLngDeg = (maxLng - minLng) || 0.004;
+  const mLat = rangeLatDeg * 0.35, mLng = rangeLngDeg * 0.35;
+  const bMinLat = minLat - mLat, bMaxLat = maxLat + mLat;
+  const bMinLng = minLng - mLng, bMaxLng = maxLng + mLng;
+  const pad = 28;
+
+  function toXY(lat, lng) {
+    const x = pad + (lng - bMinLng) / (bMaxLng - bMinLng) * (W - 2 * pad);
+    const y = H - pad - (lat - bMinLat) / (bMaxLat - bMinLat) * (H - 2 * pad);
+    return [x, y];
+  }
+
+  // Line from last point to destination (dashed, faint)
+  const [xd, yd] = toXY(dest.lat, dest.lng);
+  const last = gpsPoints[gpsPoints.length - 1];
+  const [xl, yl] = toXY(last.lat, last.lng);
+  ctx.beginPath();
+  ctx.setLineDash([5, 5]);
+  ctx.strokeStyle = 'rgba(0,85,164,0.18)';
+  ctx.lineWidth = 2;
+  ctx.moveTo(xl, yl);
+  ctx.lineTo(xd, yd);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Lines connecting GPS points chronologically
+  if (gpsPoints.length > 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(0,85,164,0.35)';
+    ctx.lineWidth = 2;
+    const [x0, y0] = toXY(gpsPoints[0].lat, gpsPoints[0].lng);
+    ctx.moveTo(x0, y0);
+    for (let i = 1; i < gpsPoints.length; i++) {
+      const [x, y] = toXY(gpsPoints[i].lat, gpsPoints[i].lng);
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Destination marker
+  ctx.beginPath();
+  ctx.arc(xd, yd, 9, 0, Math.PI * 2);
+  ctx.fillStyle = '#EF4135';
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  // crosshair
+  ctx.strokeStyle = 'rgba(239,65,53,0.6)';
+  ctx.lineWidth = 1.5;
+  [[xd - 15, yd, xd - 10, yd],[xd + 10, yd, xd + 15, yd],
+   [xd, yd - 15, xd, yd - 10],[xd, yd + 10, xd, yd + 15]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  });
+
+  // GPS points
+  gpsPoints.forEach((p, i) => {
+    const [x, y] = toXY(p.lat, p.lng);
+    const isLast = i === gpsPoints.length - 1;
+    const r = isLast ? 11 : 8;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = isLast ? '#0055A4' : 'rgba(0,85,164,0.55)';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = isLast ? 2.5 : 2;
+    ctx.stroke();
+
+    // Number inside dot
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${isLast ? 10 : 9}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(i + 1, x, y);
+
+    // Distance label
+    if (isLast || gpsPoints.length <= 4) {
+      const labelX = x > W / 2 ? x - r - 4 : x + r + 4;
+      const align = x > W / 2 ? 'right' : 'left';
+      ctx.font = `bold ${isLast ? 11 : 10}px system-ui, sans-serif`;
+      ctx.textAlign = align;
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = isLast ? '#0055A4' : 'rgba(0,85,164,0.75)';
+      ctx.fillText(p.distText, labelX, y);
+    }
+  });
 }
 
 // =====================================================
@@ -7481,11 +7613,13 @@ function tirerAuSort() {
   state.usedMap = false;
   state.gpsClicks = 0;
   gpsLastDist = null;
+  gpsPoints = [];
   renderChallenge(lieu);
 }
 
 function renderChallenge(lieu) {
   gpsLastDist = null;
+  gpsPoints = [];
   const distHome = haversineKm(HOME.lat, HOME.lng, lieu.lat, lieu.lng);
   const nearby15 = distHome <= WALK_15MIN_KM;
   const nearby30  = distHome <= WALK_30MIN_KM;
@@ -7515,6 +7649,10 @@ function renderChallenge(lieu) {
             <div class="gps-trend initial" id="gpsTrendEl"></div>
             <div class="gps-accuracy" id="gpsAccuracyEl"></div>
           </div>
+        </div>
+        <div class="gps-minimap" id="gpsMinimapWrap" style="display:none">
+          <div class="gps-minimap-label">Tracé GPS</div>
+          <canvas id="gpsMinimapCanvas" width="560" height="320"></canvas>
         </div>
       </div>
       <div class="card-actions">
