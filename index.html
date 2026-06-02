@@ -506,6 +506,38 @@ body {
   background: #f0f4f8;
 }
 
+/* === NOTICE OVERLAY === */
+.notice-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 150; animation: fadeIn 0.2s ease;
+}
+.notice-card {
+  background: white; border-radius: 24px; padding: 28px 24px;
+  max-width: 340px; width: 92%;
+  animation: popIn 0.3s ease;
+  max-height: 88dvh; overflow-y: auto;
+}
+.notice-title { font-size: 1.35rem; font-weight: 800; color: var(--text); text-align: center; margin-bottom: 4px; }
+.notice-sub { font-size: 0.82rem; color: var(--muted); text-align: center; margin-bottom: 20px; line-height: 1.45; }
+.notice-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.notice-item:last-of-type { border-bottom: none; }
+.notice-item-icon { font-size: 1.4rem; flex-shrink: 0; width: 30px; text-align: center; margin-top: 1px; }
+.notice-item-text { font-size: 0.85rem; line-height: 1.45; }
+.notice-item-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 0.9rem; }
+.notice-item-text span { color: var(--muted); }
+.notice-help-btn {
+  background: rgba(255,255,255,0.22); border: none; border-radius: 50%;
+  width: 28px; height: 28px; font-size: 0.85rem; font-weight: 800;
+  color: white; cursor: pointer; flex-shrink: 0; margin-right: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.notice-help-btn:active { background: rgba(255,255,255,0.4); }
+
 </style>
 </head>
 <body>
@@ -528,6 +560,7 @@ body {
     <div class="header-title">🗺️ Paris Aléatoire</div>
     <div class="header-sub">Explore ta ville autrement</div>
   </div>
+  <button class="notice-help-btn" onclick="ouvrirNotice()" title="Comment jouer ?">?</button>
   <div class="stats-pill" onclick="ouvrirProfil()" style="cursor:pointer" title="Changer de compte">
     <span id="hdr-pseudo" style="opacity:0.9">👤</span>
     <span>⭐ <span id="hdr-score">0</span></span>
@@ -693,6 +726,70 @@ body {
     </div>
 
     <button class="reset-btn" onclick="confirmerReset()">🗑️ Remettre à zéro la progression</button>
+
+    <div style="text-align:center;margin-top:24px;padding-bottom:8px">
+      <div style="font-size:0.72rem;color:var(--muted);font-weight:600;letter-spacing:0.02em">
+        fait avec ♥ par Quentin &amp; Jeanne
+      </div>
+      <div style="font-size:0.65rem;color:var(--border);margin-top:3px;font-weight:600;letter-spacing:0.08em">v1.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE OVERLAY -->
+<div class="notice-overlay" id="noticeOverlay" style="display:none" onclick="fermerNotice()">
+  <div class="notice-card" onclick="event.stopPropagation()">
+    <div style="font-size:2.8rem;text-align:center;margin-bottom:8px">🗺️</div>
+    <div class="notice-title">Comment jouer ?</div>
+    <div class="notice-sub">Explore Paris autrement, un tirage au sort à la fois</div>
+
+    <div class="notice-item">
+      <div class="notice-item-icon">🎲</div>
+      <div class="notice-item-text">
+        <strong>Tirer au sort</strong>
+        <span>Choisis Lieu ou Rue, sélectionne un filtre de zone (Maison, GPS…), puis lance le tirage.</span>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-item-icon">🗺️</div>
+      <div class="notice-item-text">
+        <strong>Rejoindre le lieu</strong>
+        <span>Utilise les indices ou la carte pour te rendre sur place — à pied, à vélo ou en métro.</span>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-item-icon">💡</div>
+      <div class="notice-item-text">
+        <strong>Indices déblocables</strong>
+        <span>Chaque indice révélé coûte 1 ⭐. Moins tu en utilises, plus tu gagnes de points à l'arrivée.</span>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-item-icon">📡</div>
+      <div class="notice-item-text">
+        <strong>GPS en temps réel</strong>
+        <span>Active le GPS pendant ta balade pour suivre la distance restante. La minimap (−1 ⭐) indique la direction.</span>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-item-icon">✅</div>
+      <div class="notice-item-text">
+        <strong>Marquer visité</strong>
+        <span>Une fois sur place, valide ta visite et gagne des étoiles. Accumule-les pour débloquer des trophées !</span>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-item-icon">🏠</div>
+      <div class="notice-item-text">
+        <strong>Mode "En rentrant"</strong>
+        <span>Configure ta position dans <strong>Réglages</strong> pour filtrer les lieux proches de chez toi ou sur ton chemin.</span>
+      </div>
+    </div>
+
+    <button class="btn btn-close" onclick="fermerNotice()" style="width:100%;margin-top:20px;padding:14px;font-size:1rem">
+      C'est compris, on y va ! 🎲
+    </button>
+    <div style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:10px">Tu peux retrouver ce guide via le bouton <strong>?</strong> en haut à droite</div>
   </div>
 </div>
 
@@ -7074,6 +7171,14 @@ function saveState() {
 // =====================================================
 //  AUTH — PSEUDO
 // =====================================================
+function ouvrirNotice() {
+  document.getElementById('noticeOverlay').style.display = 'flex';
+}
+function fermerNotice() {
+  localStorage.setItem('paris-random-notice-seen', '1');
+  document.getElementById('noticeOverlay').style.display = 'none';
+}
+
 function validerPseudo() {
   const input = document.getElementById('pseudoInput');
   const pseudo = (input.value || '').trim();
@@ -7086,6 +7191,7 @@ function validerPseudo() {
   updateHeader();
   renderStats();
   renderSettings();
+  if (!localStorage.getItem('paris-random-notice-seen')) ouvrirNotice();
 }
 
 function initAuth() {
@@ -7093,6 +7199,8 @@ function initAuth() {
   if (!pseudo) {
     document.getElementById('loginOverlay').style.display = 'flex';
     setTimeout(() => { const el = document.getElementById('pseudoInput'); if(el) el.focus(); }, 350);
+  } else if (!localStorage.getItem('paris-random-notice-seen')) {
+    ouvrirNotice();
   }
 }
 
