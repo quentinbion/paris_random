@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Paris Aléatoire</title>
-<meta name="theme-color" content="#0055A4">
+<meta name="theme-color" content="#E63946">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Paris Aléatoire">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
-  --blue: #0055A4;
-  --blue-dark: #003d7a;
+  --accent: #E63946;
+  --accent-dark: #B02A37;
   --red: #EF4135;
   --gold: #C9A227;
   --bg: #F0F2F5;
@@ -38,14 +38,14 @@ body {
 
 /* === HEADER === */
 .header {
-  background: var(--blue);
+  background: var(--accent);
   color: white;
   padding: 14px 18px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,85,164,0.3);
+  box-shadow: 0 2px 8px rgba(230,57,70,0.3);
 }
 .header-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; }
 .header-sub { font-size: 0.7rem; opacity: 0.8; margin-top: 1px; }
@@ -79,7 +79,7 @@ body {
   transition: all 0.2s;
   user-select: none;
 }
-.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
 
 /* === CONTENT === */
@@ -103,7 +103,7 @@ body {
   font-size: 0.9rem; font-weight: 700; cursor: pointer; background: transparent;
   color: var(--muted); transition: all 0.18s;
 }
-.type-btn.active { background: var(--blue); color: white; box-shadow: 0 2px 8px rgba(0,85,164,0.3); }
+.type-btn.active { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(230,57,70,0.3); }
 .local-label {
   display: flex; align-items: center; gap: 8px;
   font-size: 0.85rem; font-weight: 600; color: var(--text);
@@ -119,10 +119,10 @@ body {
   width: 18px; height: 18px; background: white; border-radius: 50%;
   transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
-.local-label input:checked ~ .local-toggle-pill { background: #1D4ED8; }
+.local-label input:checked ~ .local-toggle-pill { background: #E63946; }
 .local-label input:checked ~ .local-toggle-pill::after { transform: translateX(18px); }
 .draw-btn {
-  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: white; border: none; border-radius: 50px;
   padding: 16px 40px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
   box-shadow: var(--shadow-lg); transition: transform 0.1s, box-shadow 0.1s;
@@ -145,7 +145,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .card-header {
-  background: linear-gradient(135deg, var(--blue) 0%, #1a73e8 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #FF6B6B 100%);
   color: white;
   padding: 20px;
   position: relative;
@@ -203,11 +203,11 @@ body {
   border: 1.5px solid transparent;
 }
 .hint-row:active { transform: scale(0.99); }
-.hint-row.revealed { background: #EEF5FF; border-color: #CCE0FF; cursor: default; }
+.hint-row.revealed { background: #FEF2F2; border-color: #FECACA; cursor: default; }
 .hint-row.locked { opacity: 0.5; }
 .hint-icon { font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
 .hint-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
-.hint-value { font-size: 0.95rem; font-weight: 700; color: var(--blue); }
+.hint-value { font-size: 0.95rem; font-weight: 700; color: var(--accent); }
 .hint-lock { font-size: 0.9rem; margin-left: auto; }
 .hint-cost { font-size: 0.65rem; color: var(--muted); margin-left: auto; }
 
@@ -280,7 +280,7 @@ body {
 .success-title { font-size: 1.5rem; font-weight: 800; color: var(--text); }
 .success-points { font-size: 1.1rem; color: var(--gold); font-weight: 700; margin: 8px 0; }
 .success-nom { font-size: 0.95rem; color: var(--muted); margin-bottom: 20px; }
-.btn-close { background: var(--blue); color: white; width: 100%; }
+.btn-close { background: var(--accent); color: white; width: 100%; }
 
 /* === LISTE TAB === */
 .filter-bar {
@@ -295,21 +295,21 @@ body {
   cursor: pointer; transition: all 0.15s; color: var(--muted);
   white-space: nowrap;
 }
-.filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+.filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
 .search-box {
   width: 100%; padding: 11px 16px;
   border: 1.5px solid var(--border); border-radius: 12px;
   font-size: 0.9rem; background: white; color: var(--text);
   margin-bottom: 12px; outline: none;
 }
-.search-box:focus { border-color: var(--blue); }
+.search-box:focus { border-color: var(--accent); }
 .list-item {
   background: white; border-radius: 14px; padding: 13px 14px;
   margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
   box-shadow: var(--shadow); cursor: pointer; transition: all 0.15s;
   border: 1.5px solid transparent;
 }
-.list-item:active { transform: scale(0.99); border-color: var(--blue); }
+.list-item:active { transform: scale(0.99); border-color: var(--accent); }
 .list-item.visited { border-color: #BBF7D0; background: #F0FDF4; }
 .list-emoji { font-size: 1.5rem; flex-shrink: 0; }
 .list-info { flex: 1; min-width: 0; }
@@ -320,7 +320,7 @@ body {
   border-radius: 20px; flex-shrink: 0;
 }
 .badge-visited { background: #DCFCE7; color: #166534; }
-.badge-type { background: #EEF5FF; color: var(--blue); }
+.badge-type { background: #FEF2F2; color: var(--accent); }
 .list-count { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; font-weight: 600; }
 
 /* === STATS TAB === */
@@ -329,7 +329,7 @@ body {
   background: white; border-radius: 14px; padding: 16px;
   text-align: center; box-shadow: var(--shadow);
 }
-.stat-val { font-size: 2rem; font-weight: 800; color: var(--blue); }
+.stat-val { font-size: 2rem; font-weight: 800; color: var(--accent); }
 .stat-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
 .achievements { margin-top: 4px; }
 .ach-title { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
@@ -346,7 +346,7 @@ body {
   height: 6px; background: var(--border); border-radius: 3px;
   margin-top: 6px; overflow: hidden;
 }
-.progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.5s; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s; }
 .reset-btn {
   width: 100%; padding: 12px; margin-top: 16px;
   background: transparent; border: 1.5px solid var(--border);
@@ -357,7 +357,7 @@ body {
 
 /* === LOGIN OVERLAY === */
 .login-overlay {
-  position: fixed; inset: 0; background: var(--blue);
+  position: fixed; inset: 0; background: var(--accent);
   display: flex; align-items: center; justify-content: center; z-index: 200;
 }
 .login-card {
@@ -373,7 +373,7 @@ body {
   margin-bottom: 16px; font-weight: 700; color: var(--text); outline: none;
   font-family: inherit;
 }
-.login-input:focus { border-color: var(--blue); }
+.login-input:focus { border-color: var(--accent); }
 .profile-section {
   background: white; border-radius: 14px; padding: 14px 16px;
   display: flex; align-items: center; justify-content: space-between;
@@ -415,17 +415,17 @@ body {
   border-radius: 10px; font-size: 0.95rem; font-weight: 700; text-align: center;
   outline: none; font-family: inherit; color: var(--text);
 }
-.dur-custom-input:focus { border-color: var(--blue); }
+.dur-custom-input:focus { border-color: var(--accent); }
 
 /* === MODE TOGGLE LISTE === */
 .mode-toggle { display:flex; background:var(--bg); border-radius:14px; padding:3px; margin-bottom:14px; gap:3px; }
 .mode-btn { flex:1; padding:9px 6px; border:none; border-radius:11px; font-size:0.78rem; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:all 0.15s; }
-.mode-btn.active { background:white; color:var(--blue); box-shadow:var(--shadow); }
+.mode-btn.active { background:white; color:var(--accent); box-shadow:var(--shadow); }
 .arr-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
 .arr-chip { padding:5px 10px; background:white; border:1.5px solid var(--border); border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; color:var(--muted); }
-.arr-chip.active { background:var(--blue); color:white; border-color:var(--blue); }
+.arr-chip.active { background:var(--accent); color:white; border-color:var(--accent); }
 .voie-item { background:white; border-radius:12px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid transparent; transition:all 0.12s; }
-.voie-item:active { transform:scale(0.99); border-color:var(--blue); }
+.voie-item:active { transform:scale(0.99); border-color:var(--accent); }
 .voie-item.visited { border-color:#BBF7D0; background:#F0FDF4; }
 .voie-name { font-weight:700; font-size:0.88rem; }
 .voie-meta { font-size:0.72rem; color:var(--muted); margin-top:2px; }
@@ -445,7 +445,7 @@ body {
   padding: 12px 14px;
 }
 .gps-btn {
-  background: var(--blue);
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 10px;
@@ -632,8 +632,8 @@ body {
       <input class="search-box" id="searchBox" placeholder="🔍 Rechercher un lieu..." oninput="renderListe()">
       <div class="filter-bar" id="filterBar">
         <div class="filter-chip active" data-filter="tous" onclick="setFilter('tous', this)">Tous</div>
-        <div class="filter-chip" data-filter="pres15" onclick="setFilter('pres15', this)" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">🏠 15min</div>
-        <div class="filter-chip" data-filter="pres" onclick="setFilter('pres', this)" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">🏠 30min</div>
+        <div class="filter-chip" data-filter="pres15" onclick="setFilter('pres15', this)" style="background:#FEF2F2;border-color:#FECACA;color:#E63946">🏠 15min</div>
+        <div class="filter-chip" data-filter="pres" onclick="setFilter('pres', this)" style="background:#FEF2F2;border-color:#FECACA;color:#E63946">🏠 30min</div>
         <div class="filter-chip" data-filter="monument" onclick="setFilter('monument', this)">🏛️ Monuments</div>
         <div class="filter-chip" data-filter="pont" onclick="setFilter('pont', this)">🌉 Ponts</div>
         <div class="filter-chip" data-filter="parc" onclick="setFilter('parc', this)">🌳 Parcs</div>
@@ -651,8 +651,8 @@ body {
       <input class="search-box" id="voiesSearch" placeholder="🔍 Nom d'une rue, impasse, quai…" oninput="renderVoies()">
       <div class="arr-filters" id="arrFilters">
         <div class="arr-chip active" data-arr="0" onclick="setArrFilter(0,this)">Tous</div>
-        <div class="arr-chip" data-arr="-2" onclick="setArrFilter(-2,this)" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">🏠 15min</div>
-        <div class="arr-chip" data-arr="-1" onclick="setArrFilter(-1,this)" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">🏠 30min</div>
+        <div class="arr-chip" data-arr="-2" onclick="setArrFilter(-2,this)" style="background:#FEF2F2;border-color:#FECACA;color:#E63946">🏠 15min</div>
+        <div class="arr-chip" data-arr="-1" onclick="setArrFilter(-1,this)" style="background:#FEF2F2;border-color:#FECACA;color:#E63946">🏠 30min</div>
         <div class="arr-chip" data-arr="1" onclick="setArrFilter(1,this)">1e</div><div class="arr-chip" data-arr="2" onclick="setArrFilter(2,this)">2e</div><div class="arr-chip" data-arr="3" onclick="setArrFilter(3,this)">3e</div><div class="arr-chip" data-arr="4" onclick="setArrFilter(4,this)">4e</div><div class="arr-chip" data-arr="5" onclick="setArrFilter(5,this)">5e</div><div class="arr-chip" data-arr="6" onclick="setArrFilter(6,this)">6e</div><div class="arr-chip" data-arr="7" onclick="setArrFilter(7,this)">7e</div><div class="arr-chip" data-arr="8" onclick="setArrFilter(8,this)">8e</div><div class="arr-chip" data-arr="9" onclick="setArrFilter(9,this)">9e</div><div class="arr-chip" data-arr="10" onclick="setArrFilter(10,this)">10e</div><div class="arr-chip" data-arr="11" onclick="setArrFilter(11,this)">11e</div><div class="arr-chip" data-arr="12" onclick="setArrFilter(12,this)">12e</div><div class="arr-chip" data-arr="13" onclick="setArrFilter(13,this)">13e</div><div class="arr-chip" data-arr="14" onclick="setArrFilter(14,this)">14e</div><div class="arr-chip" data-arr="15" onclick="setArrFilter(15,this)">15e</div><div class="arr-chip" data-arr="16" onclick="setArrFilter(16,this)">16e</div><div class="arr-chip" data-arr="17" onclick="setArrFilter(17,this)">17e</div><div class="arr-chip" data-arr="18" onclick="setArrFilter(18,this)">18e</div><div class="arr-chip" data-arr="19" onclick="setArrFilter(19,this)">19e</div><div class="arr-chip" data-arr="20" onclick="setArrFilter(20,this)">20e</div>
       </div>
       <div id="voies-count" class="list-count"></div>
